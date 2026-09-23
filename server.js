@@ -29,7 +29,11 @@ const PORT = process.env.PORT || 5000
 
 const conn = await connectDB()
 
-if (!conn) {
+if (!conn && process.env.NODE_ENV === 'production') {
+  // File DB is wiped on every redeploy/restart on hosts like Render — fail loudly instead
+  console.error('❌ MongoDB unavailable in production — exiting')
+  process.exit(1)
+} else if (!conn) {
   console.log('↩️  Falling back to file DB (server.file.js)')
   await import('./server.file.js')
 } else {
