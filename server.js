@@ -1,452 +1,68 @@
-import express from 'express';
-import cors from 'cors';
-import fs from 'fs';
-import path from 'path';
-import { fileURLToPath } from 'url';
-import jwt from 'jsonwebtoken';
+// HomWisor backend — MVC entry (Express + MongoDB)
+// Uses MONGODB_URI from .env. If it is missing or the connection fails,
+// falls back to the file DB server (server.file.js → data/db.json).
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+import 'dotenv/config'
+import express from 'express'
+import 'express-async-errors'
+import cors from 'cors'
+import fs from 'fs'
+import path from 'path'
+import { fileURLToPath } from 'url'
+import connectDB from './config/db.js'
+import { seedIfEmpty } from './utils/seed.js'
 
-const app = express();
-const PORT = 5000;
-const JWT_SECRET = 'HomWisor-secret-key-2026';
+import authRoutes from './routes/authRoutes.js'
+import adminRoutes from './routes/adminRoutes.js'
+import propertyRoutes from './routes/propertyRoutes.js'
+import snapRoutes from './routes/snapRoutes.js'
+import bannerRoutes from './routes/bannerRoutes.js'
+import locationRoutes from './routes/locationRoutes.js'
+import offerRoutes from './routes/offerRoutes.js'
+import builderRoutes from './routes/builderRoutes.js'
+import testimonialRoutes from './routes/testimonialRoutes.js'
+import enquiryRoutes from './routes/enquiryRoutes.js'
+import settingsRoutes from './routes/settingsRoutes.js'
 
-app.use(cors());
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true }));
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+const __dirname = path.dirname(fileURLToPath(import.meta.url))
+const PORT = process.env.PORT || 5000
 
-if (!fs.existsSync(path.join(__dirname, 'uploads'))) fs.mkdirSync(path.join(__dirname, 'uploads'));
-if (!fs.existsSync(path.join(__dirname, 'data'))) fs.mkdirSync(path.join(__dirname, 'data'));
+const conn = await connectDB()
 
-const DATA_FILE = path.join(__dirname, 'data', 'db.json');
+if (!conn) {
+  console.log('↩️  Falling back to file DB (server.file.js)')
+  await import('./server.file.js')
+} else {
+  await seedIfEmpty()
 
-const defaultData = {
-  banners: {
-    hero: [
-      { id: "h1", image: "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=1600&h=600&fit=crop", link: "#", title: "Godrej Trio - Luxury at 63A", developer: "GODREJ PROPERTIES" },
-      { id: "h2", image: "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=1600&h=600&fit=crop", link: "#", title: "BPTP 3 Projects Hero", developer: "BPTP LIMITED" },
-      { id: "h3", image: "https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=1600&h=600&fit=crop", link: "#", title: "Branded Residences", developer: "BRANDED RESIDENCES" },
-      { id: "h4", image: "https://images.unsplash.com/photo-1600047509807-ba8f99d2cdde?w=1600&h=600&fit=crop", link: "#", title: "Elan Trio Luxury", developer: "ELAN GROUP" }
-    ],
-    small: [
-      { id: "s1", image: "https://images.unsplash.com/photo-1600585154526-990dced4db0d?w=600&h=280&fit=crop", title: "Godrej Verano", link: "#" },
-      { id: "s2", image: "https://images.unsplash.com/photo-1600566753086-00f18fb6b3ea?w=600&h=280&fit=crop", title: "M3M Brabus", link: "#" },
-      { id: "s3", image: "https://images.unsplash.com/photo-1600607687644-c7171b42498b?w=600&h=280&fit=crop", title: "Max Antara", link: "#" },
-      { id: "s4", image: "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=600&h=280&fit=crop", title: "Experion Trio", link: "#" }
-    ]
-  },
-  locations: [
-    { id: "l1", name: "Golf Course Road", image: "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=400&h=300&fit=crop", count: "142 Projects", link: "#" },
-    { id: "l2", name: "Golf Course Ext. Road", image: "https://images.unsplash.com/photo-1449824913935-59a10b8d2000?w=400&h=300&fit=crop", count: "98 Projects", link: "#" },
-    { id: "l3", name: "Sohna Road", image: "https://images.unsplash.com/photo-1494526585095-c41746248156?w=400&h=300&fit=crop", count: "76 Projects", link: "#" },
-    { id: "l4", name: "Southern Peripheral Road", image: "https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?w=400&h=300&fit=crop", count: "64 Projects", link: "#" },
-    { id: "l5", name: "Dwarka Expressway", image: "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=400&h=300&fit=crop", count: "112 Projects", link: "#" },
-    { id: "l6", name: "New Gurgaon", image: "https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=400&h=300&fit=crop", count: "89 Projects", link: "#" }
-  ],
-  properties: [
-    { 
-      id: "p1", title: "BPTP DownTown 66", price: "₹5.20 Cr", priceRange: "₹ 5.2 - 5.8 Cr", location: "Sector 66, Golf Course Extension Road, Gurugram", 
-      image: "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=600&h=400&fit=crop", 
-      logo: "https://via.placeholder.com/200x80/0f2b46/ffffff?text=BPTP", logoRequired:"200x80", imageRequired:"600x400",
-      brandColor:"#0f2b46", developer:"BPTP Group",
-      highlights:["Podium-level clubhouse with infinity pool","Strategic Golf Course Ext. location with 360° connectivity","Low-density 3 towers across 12 acres","2 apartments per floor with private lobbies"],
-      gallery:["https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=800&h=500&fit=crop","https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=800&h=500&fit=crop","https://images.unsplash.com/photo-1600047509807-ba8f99d2cdde?w=800&h=500&fit=crop"],
-      category: "recommended", tag: "Founder Choice", rera: true, bhk: "3/4 BHK", type: "Apartment", status: "Trending" 
-    },
-    { 
-      id: "p2", title: "M3M Brabus Residences", price: "₹20.00 Cr", priceRange: "₹ 20 - 28 Cr", location: "Sector 58, Golf Course Extension Road, Gurugram", 
-      image: "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=600&h=400&fit=crop", 
-      logo: "https://via.placeholder.com/200x80/1e3a5f/ffffff?text=M3M", logoRequired:"200x80", imageRequired:"600x400",
-      brandColor:"#1e3a5f", developer:"M3M Group",
-      highlights:["Two Apartments Per Floor but Feels Like One Home on Each Floor","Ultra-Luxury 4 & 5 BHK Residences - Spacious homes planned in sizes of approximately 5000 - 7000 SQ.FT","Low-Density Development - Planned across around 30 acres with just 2 towers and approximately 240 residences.","Two Residences Per Core - A planning concept designed to limit the number of homes sharing common access areas."],
-      gallery:["https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=800&h=500&fit=crop","https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=800&h=500&fit=crop","https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=800&h=500&fit=crop"],
-      category: "recommended", tag: "Founder Choice", rera: true, bhk: "4/5 BHK", type: "Villa", status: "Trending" 
-    },
-    { 
-      id: "p3", title: "Antara Senior Living at Estate 361", price: "₹5.17 Cr", priceRange: "₹ 5.17 - 7.57 Cr", location: "Sector 36, Dwarka Expressway, Gurugram", 
-      image: "https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=600&h=400&fit=crop", 
-      logo: "https://via.placeholder.com/200x80/0a5c36/ffffff?text=ANTARA", logoRequired:"200x80", imageRequired:"600x400",
-      brandColor:"#0a5c36", developer:"Antara / Max Estates",
-      highlights:["India's first senior living with 5-star hospitality","36-acre integrated township on Dwarka Expressway","Dedicated wellness & healthcare on campus","1 & 2 BHK senior-friendly residences"],
-      gallery:["https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=800&h=500&fit=crop","https://images.unsplash.com/photo-1600566753086-00f18fb6b3ea?w=800&h=500&fit=crop"],
-      category: "recommended", tag: "Founder Choice", rera: true, bhk: "2/3 BHK", type: "Apartment", status: "New Launch" 
-    },
-    { 
-      id: "p4", title: "Godrej Verano", price: "₹5.91 Cr", priceRange: "₹ 5.91 - 10.72 Cr", location: "Sector 63A, Golf Course Extension Road, Gurugram", 
-      image: "https://images.unsplash.com/photo-1600047509807-ba8f99d2cdde?w=600&h=400&fit=crop", 
-      logo: "https://via.placeholder.com/200x80/8b1a1a/ffffff?text=GODREJ", logoRequired:"200x80", imageRequired:"600x400",
-      brandColor:"#8b1a1a", developer:"Godrej Properties",
-      highlights:["Spanish architecture with central greens","Resort-style clubhouse 35,000 sq.ft.","3 & 4 BHK with private decks","5-tier security & sustainable design"],
-      gallery:["https://images.unsplash.com/photo-1600047509807-ba8f99d2cdde?w=800&h=500&fit=crop","https://images.unsplash.com/photo-1600585154526-990dced4db0d?w=800&h=500&fit=crop"],
-      category: "recommended", tag: "Founder Choice", rera: true, bhk: "3/4 BHK", type: "Apartment", status: "Upcoming" 
-    },
-    { 
-      id: "p5", title: "Gaia Residences & Verti Greens", price: "₹3.47 Cr", priceRange: "₹ 3.47 - 4.2 Cr", location: "Sector 102, Dwarka Expressway, Gurugram", 
-      image: "https://images.unsplash.com/photo-1600585154526-990dced4db0d?w=600&h=400&fit=crop", 
-      logo: "https://via.placeholder.com/200x80/1a5a4a/ffffff?text=GAIA", logoRequired:"200x80", imageRequired:"600x400",
-      brandColor:"#1a5a4a", developer:"BPTP",
-      highlights:["Vertical gardens & air-purifying facade","Sky club on 20th floor with infinity pool","Smart 3 BHK with German fittings","Dwarka Expressway zero-km location"],
-      gallery:["https://images.unsplash.com/photo-1600585154526-990dced4db0d?w=800&h=500&fit=crop","https://images.unsplash.com/photo-1600607687644-c7171b42498b?w=800&h=500&fit=crop"],
-      category: "trending", tag: "RERA", rera: true, bhk: "3 BHK", type: "Apartment", status: "Trending" 
-    },
-    { 
-      id: "p6", title: "Experion One 42", price: "₹28.00 Cr", priceRange: "₹ 28 - 65 Cr", location: "Sector 42, Golf Course Road, Gurugram", 
-      image: "https://images.unsplash.com/photo-1600566753086-00f18fb6b3ea?w=600&h=400&fit=crop", 
-      logo: "https://via.placeholder.com/200x80/3a2a60/ffffff?text=EXPERION", logoRequired:"200x80", imageRequired:"600x400",
-      brandColor:"#3a2a60", developer:"Experion",
-      highlights:["Ultra-premium Golf Course Road address","42-storey iconic tower with 360° city views","4 & 5 BHK penthouses with private pools","Conceived by Hafeez Contractor"],
-      gallery:["https://images.unsplash.com/photo-1600566753086-00f18fb6b3ea?w=800&h=500&fit=crop","https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=800&h=500&fit=crop"],
-      category: "trending", tag: "RERA", rera: true, bhk: "4/5 BHK", type: "Villa", status: "Trending" 
-    },
-    { 
-      id: "p7", title: "Elan The Statement", price: "₹11.44 Cr", priceRange: "₹ 11.44 - 16.51 Cr", location: "Sector 49, Sohna Road, Gurugram", 
-      image: "https://images.unsplash.com/photo-1600607687644-c7171b42498b?w=600&h=400&fit=crop", 
-      logo: "https://via.placeholder.com/200x80/0b1e3a/ffffff?text=ELAN", logoRequired:"200x80", imageRequired:"600x400",
-      brandColor:"#0b1e3a", developer:"Elan Group",
-      highlights:["Statement tower on Sohna Road","3 & 4 BHK with sun-decks","7-star club & business lounge","Direct NH-248A connectivity"],
-      gallery:["https://images.unsplash.com/photo-1600607687644-c7171b42498b?w=800&h=500&fit=crop","https://images.unsplash.com/photo-1600585154526-990dced4db0d?w=800&h=500&fit=crop"],
-      category: "trending", tag: "RERA", rera: true, bhk: "3/4 BHK", type: "Apartment", status: "Trending" 
-    },
-    { id: "p8", title: "M3M Elie Saab at SCDA", price: "₹14.60 Cr", priceRange: "₹ 14.6 - 16.16 Cr", location: "Sector 111, Dwarka Expressway, Gurugram", image: "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=600&h=400&fit=crop", logo:"https://via.placeholder.com/200x80/1e3a5f/ffffff?text=M3M", brandColor:"#1e3a5f", developer:"M3M", highlights:["Paris fashion house Elie Saab interiors","SCDA Arabian theming with lagoon","4 BHK ultra-luxury residences","Dwarka Expressway flagship"], gallery:["https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=800&h=500&fit=crop"], category: "trending", tag: "RERA", rera: true, bhk: "4 BHK", type: "Apartment", status: "Upcoming" },
-    { id: "p9", title: "M3M FranckMuller Residences", price: "₹27.50 Cr", priceRange: "₹ 27.5 - 28 Cr", location: "Sector 43, Golf Course Road, Gurugram", image: "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=600&h=400&fit=crop", logo:"https://via.placeholder.com/200x80/1e3a5f/ffffff?text=M3M", brandColor:"#1e3a5f", developer:"M3M", highlights:["Swiss watchmaker Franck Muller design","Golf Course Road landmark","4 BHK convertible residences"], gallery:["https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=800&h=500&fit=crop"], category: "upcoming", tag: "RERA", rera: true, bhk: "4 BHK", type: "Apartment", status: "Upcoming" },
-    { id: "p10", title: "L & T New Launch", price: "₹4.99 Cr", priceRange: "₹ 4.99 - 8.04 Cr", location: "Sector 86, New Gurgaon, Gurugram", image: "https://images.unsplash.com/photo-1600047509807-ba8f99d2cdde?w=600&h=400&fit=crop", logo:"https://via.placeholder.com/200x80/003366/ffffff?text=L%26T", brandColor:"#003366", developer:"L&T Realty", highlights:["L&T construction quality","New Gurgaon growth corridor","3 BHK green residences"], gallery:["https://images.unsplash.com/photo-1600047509807-ba8f99d2cdde?w=800&h=500&fit=crop"], category: "upcoming", tag: "RERA", rera: true, bhk: "3 BHK", type: "Apartment", status: "Upcoming" },
-    { id: "p11", title: "Experion Cascades", price: "₹3.87 Cr", priceRange: "₹ 3.87 - 5.4 Cr", location: "Sector 88A, Dwarka Expressway, Gurugram", image: "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=600&h=400&fit=crop", logo:"https://via.placeholder.com/200x80/3a2a60/ffffff?text=EXPERION", brandColor:"#3a2a60", developer:"Experion", highlights:["Cascade architecture with stepped greens","3 BHK riverside residences","Dwarka Expressway 88A"], gallery:["https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=800&h=500&fit=crop"], category: "upcoming", tag: "RERA", rera: true, bhk: "3 BHK", type: "Apartment", status: "Upcoming" },
-    { id: "p12", title: "Cocoa County", price: "₹4.15 Cr", priceRange: "₹ 4.15 - 7.47 Cr", location: "Sector 88A, Dwarka Expressway, Gurugram", image: "https://images.unsplash.com/photo-1600573472592-401b489a3cdc?w=600&h=400&fit=crop", logo:"https://via.placeholder.com/200x80/6b2c1f/ffffff?text=COCOA", brandColor:"#6b2c1f", developer:"Cocoa", highlights:["European cocoa theme villas","88A low-rise independent floors","Club & orchard"], gallery:["https://images.unsplash.com/photo-1600573472592-401b489a3cdc?w=600&h=500&fit=crop"], category: "newlaunch", tag: "RERA", rera: true, bhk: "3/4 BHK", type: "Apartment", status: "New Launch" },
-    { id: "p13", title: "Signature Sarvam at DXP Estate", price: "₹2.90 Cr", priceRange: "₹ 2.9 - 3.92 Cr", location: "Sector 37D, Dwarka Expressway, Gurugram", image: "https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?w=600&h=400&fit=crop", logo:"https://via.placeholder.com/200x80/5b3a0a/ffffff?text=SIGNATURE", brandColor:"#5b3a0a", developer:"Signature Global", highlights:["DDJAY affordable luxury","DXP Estate 130-acre township","3 BHK with podium garden"], gallery:["https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?w=800&h=500&fit=crop"], category: "newlaunch", tag: "RERA", rera: true, bhk: "3 BHK", type: "Apartment", status: "New Launch" },
-    { id: "p14", title: "Max Estate 59", price: "₹16.50 Cr", priceRange: "₹ 16.5 - 38.94 Cr", location: "Sector 59, Golf Course Extension Road, Gurugram", image: "https://images.unsplash.com/photo-1600585154154-2017c6301a36?w=600&h=400&fit=crop", logo:"https://via.placeholder.com/200x80/0a5c36/ffffff?text=MAX", brandColor:"#0a5c36", developer:"Max Estates", highlights:["Estate 59 Golf Course Ext.","4 & 5 BHK villaments","Max healthcare ecosystem"], gallery:["https://images.unsplash.com/photo-1600585154154-2017c6301a36?w=800&h=500&fit=crop"], category: "newlaunch", tag: "RERA", rera: true, bhk: "4/5 BHK", type: "Villa", status: "New Launch" },
-    { id: "p15", title: "MVN Aero One", price: "₹13.86 Cr", priceRange: "₹ 13.86 - 54.44 Cr", location: "Sector 37D, Dwarka Expressway, Gurugram", image: "https://images.unsplash.com/photo-1600566753190-17f63baa68a8?w=600&h=400&fit=crop", logo:"https://via.placeholder.com/200x80/002a5c/ffffff?text=MVN", brandColor:"#002a5c", developer:"MVN", highlights:["Aviation-themed luxury","37D Dwarka Expressway","4 BHK sky villas"], gallery:["https://images.unsplash.com/photo-1600566753190-17f63baa68a8?w=800&h=500&fit=crop"], category: "newlaunch", tag: "RERA", rera: true, bhk: "4 BHK", type: "Apartment", status: "New Launch" },
-    { id: "p17", title: "Oberoi Three Sixty North", price: "₹19.00 Cr", priceRange: "₹ 19 - 29 Cr", location: "Sector 58, Golf Course Extension Road, Gurugram", image: "https://images.unsplash.com/photo-1600585154526-990dced4db0d?w=600&h=400&fit=crop", logo:"https://via.placeholder.com/200x80/1a1a1a/D4AF37?text=OBEROI", brandColor:"#1a1a1a", developer:"Oberoi Realty", highlights:["360° green views"], gallery:["https://images.unsplash.com/photo-1600585154526-990dced4db0d?w=800&h=500&fit=crop"], category: "trending", tag: "RERA", rera: true, bhk: "4 BHK", type: "Apartment", status: "Trending" },
-    { id: "p18", title: "Omaxe State Dwarka", price: "₹2.80 Cr", priceRange: "₹ 2.8 - 12.5 Cr", location: "Sector 19B, Dwarka, Delhi", image: "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=600&h=400&fit=crop", logo:"https://via.placeholder.com/200x80/8B0000/ffffff?text=OMAXE", brandColor:"#8B0000", developer:"Omaxe", highlights:["Largest mall of Delhi"], gallery:["https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=800&h=500&fit=crop"], category: "commercial", tag: "RERA", rera: true, bhk: "Retail", type: "Commercial", status: "Trending" },
-    { id: "p19", title: "Trehan IRIS Broadway", price: "₹1.90 Cr", priceRange: "₹ 1.9 - 8.4 Cr", location: "Sector 84, Dwarka Expressway, Gurugram", image: "https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=600&h=400&fit=crop", logo:"https://via.placeholder.com/200x80/003366/ffffff?text=IRIS", brandColor:"#003366", developer:"Trehan", highlights:["INOX multiplex"], gallery:["https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=800&h=500&fit=crop"], category: "commercial", tag: "RERA", rera: true, bhk: "Retail", type: "Commercial", status: "Trending" },
-    { id: "p20", title: "Elan Paradise", price: "₹1.45 Cr", priceRange: "₹ 1.45 - 6.8 Cr", location: "Sector 50, Nirvana Road, Gurugram", image: "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=600&h=400&fit=crop", logo:"https://via.placeholder.com/200x80/0B2B4A/D4AF37?text=ELAN", brandColor:"#0B2B4A", developer:"Elan Group", highlights:["5G high street"], gallery:["https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=800&h=500&fit=crop"], category: "commercial", tag: "RERA", rera: true, bhk: "Retail", type: "Commercial", status: "Trending" },
-    { id: "p21", title: "SPJ Vedatam", price: "₹2.10 Cr", priceRange: "₹ 2.1 - 9.3 Cr", location: "Sector 14, Sohna Road, Gurugram", image: "https://images.unsplash.com/photo-1497366216548-37526070297c?w=600&h=400&fit=crop", logo:"https://via.placeholder.com/200x80/1a3c5e/D4AF37?text=VEDATAM", brandColor:"#1a3c5e", developer:"SPJ Group", highlights:["Vedatam high street"], gallery:["https://images.unsplash.com/photo-1497366216548-37526070297c?w=800&h=500&fit=crop"], category: "commercial", tag: "RERA", rera: true, bhk: "Retail", type: "Commercial", status: "Trending" },
-    { id: "p22", title: "Microtek Grandfront", price: "₹3.96 Cr", priceRange: "₹ 3.96 - 5.16 Cr", location: "Sector 81, New Gurugram", image: "https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=600&h=400&fit=crop", logo:"https://via.placeholder.com/200x80/2E7D32/ffffff?text=MICROTEK", brandColor:"#2E7D32", developer:"Microtek", highlights:["SCO plots"], gallery:["https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=800&h=500&fit=crop"], category: "sco", tag: "RERA", rera: true, bhk: "SCO", type: "Commercial", status: "Trending" },
-    { id: "p23", title: "Reach The Bazaria", price: "₹6.70 Cr", priceRange: "₹ 6.7 - 19.9 Cr", location: "Sector 68, Sohna Road, Gurugram", image: "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=600&h=400&fit=crop", logo:"https://via.placeholder.com/200x80/4A0F0F/D4AF37?text=REACH", brandColor:"#4A0F0F", developer:"Reach Group", highlights:["The Bazaria"], gallery:["https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=800&h=500&fit=crop"], category: "sco", tag: "RERA", rera: true, bhk: "SCO", type: "Commercial", status: "Trending" },
-    { id: "p24", title: "EBD 114", price: "₹3.23 Cr", priceRange: "₹ 3.23 - 6.6 Cr", location: "Sector 114, Dwarka Expressway, Gurugram", image: "https://images.unsplash.com/photo-1449824913935-59a10b8d2000?w=600&h=400&fit=crop", logo:"https://via.placeholder.com/200x80/0F2B4A/ffffff?text=EBD114", brandColor:"#0F2B4A", developer:"EBD", highlights:["SHOP.MEET.RELAX"], gallery:["https://images.unsplash.com/photo-1449824913935-59a10b8d2000?w=800&h=500&fit=crop"], category: "sco", tag: "RERA", rera: true, bhk: "SCO", type: "Commercial", status: "Trending" },
-    { id: "p25", title: "DLF Central 67", price: "₹7.50 Cr", priceRange: "₹ 7.5 - 26.41 Cr", location: "Sector 67, Sohna Road, Gurugram", image: "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=600&h=400&fit=crop", logo:"https://via.placeholder.com/200x80/0B2B4A/D4AF37?text=DLF", brandColor:"#0B2B4A", developer:"DLF", highlights:["Central 67"], gallery:["https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=800&h=500&fit=crop"], category: "sco", tag: "RERA", rera: true, bhk: "SCO", type: "Commercial", status: "Trending" },
-        { id: "p16", title: "Trump Residences", price: "₹9.27 Cr", priceRange: "₹ 9.27 - 14.81 Cr", location: "Sector 69, Southern Peripheral Road, Gurugram", image: "https://images.unsplash.com/photo-1600047509358-9dc75507daeb?w=600&h=400&fit=crop", logo:"https://via.placeholder.com/200x80/111111/ffffff?text=TRUMP", brandColor:"#111111", developer:"Trump", highlights:["Trump branded interiors","SPR landmark","3 & 4 BHK luxury"], gallery:["https://images.unsplash.com/photo-1600047509358-9dc75507daeb?w=600&h=500&fit=crop"], category: "trending", tag: "RERA", rera: true, bhk: "3/4 BHK", type: "Apartment", status: "Trending" }
-  ],
-  offers: [
-    { id: "o1", title: "Experion The Trillion", price: "₹6.62 Cr", location: "Sector 48, Gurugram", image: "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=400&h=300&fit=crop", badge: "ROYAL FESTIVAL DEAL" },
-    { id: "o2", title: "Gaia Residences & Verti Greens", price: "₹3.47 Cr", location: "Sector 102, Gurugram", image: "https://images.unsplash.com/photo-1600585154526-990dced4db0d?w=400&h=300&fit=crop", badge: "LIMITED FESTIVE SLOT" },
-    { id: "o3", title: "BPTP DownTown 66", price: "₹5.20 Cr", location: "Sector 66, Gurugram", image: "https://images.unsplash.com/photo-1600585154526-990dced4db0d?w=400&h=300&fit=crop", badge: "NAVRATRI SPECIAL" },
-    { id: "o4", title: "Antara Senior Living", price: "₹5.17 Cr", location: "Sector 36, Gurugram", image: "https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=400&h=300&fit=crop", badge: "DIWALI BONANZA" },
-    { id: "o5", title: "Experion Windchants Nova", price: "₹9.13 Cr", location: "Sector 112, Gurugram", image: "https://images.unsplash.com/photo-1600566753086-00f18fb6b3ea?w=400&h=300&fit=crop", badge: "EXCLUSIVE OFFER" },
-    { id: "o6", title: "MVN Aero One", price: "₹13.86 Cr", location: "Sector 37D, Gurugram", image: "https://images.unsplash.com/photo-1600573472592-401b489a3cdc?w=400&h=300&fit=crop", badge: "ULTRA LUXURY FESTIVAL" }
-  ],
-  snaps: [
-    {
-      id: "snap1", title: "Oberoi Realty 360 North Gurugram", developer: "Oberoi Realty", location: "Gurugram (N/A)", microMarket: "Gurugram (N/A)", price: "Contact for price",
-      description: "Experience luxury living in this stunning apartment with modern amenities and breathtaking views. Where spacious living meets iconic skyline.",
-      videoUrl: "https://videos.pexels.com/video-files/18069234/18069234-uhd_1440_1440_24fps.mp4",
-      thumbnail: "https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=600&h=1000&fit=crop",
-      image: "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=600&h=1000&fit=crop",
-      phone: "9811 750 740", demandText: "High Demand: 10 buyers enquired from Delhi-NCR in last 24 hours", activeBuyers: 24, monthlyRental: "₹85,000/mo", roi: "5.5%", badge: "WHERE SPACIOUS LIVING BEGINS", verified: true
-    },
-    {
-      id: "snap2", title: "M3M Brabus Residences - Golf Course Ext", developer: "M3M Group", location: "Sector 58, Gurugram", microMarket: "Golf Course Extension Road", price: "₹20.00 Cr onwards",
-      description: "Ultra-luxury branded residences with Brabus design, private elevators and 5-star amenities. Limited edition living.",
-      videoUrl: "https://videos.pexels.com/video-files/18069166/18069166-uhd_1440_1440_24fps.mp4",
-      thumbnail: "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=600&h=1000&fit=crop",
-      image: "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=600&h=1000&fit=crop",
-      phone: "9811 750 741", demandText: "High Demand: 18 buyers enquired from Gurugram in last 24 hours", activeBuyers: 31, monthlyRental: "₹1,20,000/mo", roi: "6.2%", badge: "BRABUS EDITION", verified: true
-    },
-    {
-      id: "snap3", title: "Godrej Verano - Sector 63A", developer: "Godrej Properties", location: "Sector 63A, Gurugram", microMarket: "Golf Course Extension Road", price: "₹5.91 Cr onwards",
-      description: "Nature-inspired luxury at Godrej Verano. 3 & 4 BHK with central greens, resort-style club and seamless connectivity.",
-      videoUrl: "https://videos.pexels.com/video-files/18069235/18069235-uhd_1440_1440_24fps.mp4",
-      thumbnail: "https://images.unsplash.com/photo-1600047509807-ba8f99d2cdde?w=600&h=1000&fit=crop",
-      image: "https://images.unsplash.com/photo-1600047509807-ba8f99d2cdde?w=600&h=1000&fit=crop",
-      phone: "9811 750 742", demandText: "Trending: 22 buyers shortlisted this project today", activeBuyers: 19, monthlyRental: "₹65,000/mo", roi: "4.9%", badge: "NATURE LUXURY", verified: true
-    },
-    {
-      id: "snap4", title: "Experion Windchants Villa - Sector 112", developer: "Experion", location: "Sector 112, Dwarka Expressway", microMarket: "Dwarka Expressway", price: "₹9.13 Cr onwards",
-      description: "Sprawling 5BHK villas with private garden, terrace and German design. Experience villa living reimagined.",
-      videoUrl: "https://videos.pexels.com/video-files/3191571/3191571-uhd_2560_1440_25fps.mp4",
-      thumbnail: "https://images.unsplash.com/photo-1600607687644-c7171b42498b?w=600&h=1000&fit=crop",
-      image: "https://images.unsplash.com/photo-1600607687644-c7171b42498b?w=600&h=1000&fit=crop",
-      phone: "9811 750 743", demandText: "High Demand: 14 buyers enquired in last 24 hours", activeBuyers: 27, monthlyRental: "₹95,000/mo", roi: "5.1%", badge: "VILLA LIVING", verified: true
-    },
-    {
-      id: "snap5", title: "BPTP Gaia Residences - Verti Greens", developer: "BPTP", location: "Sector 102, Dwarka Expressway", microMarket: "Dwarka Expressway", price: "₹3.47 Cr onwards",
-      description: "Smart 3BHK residences with vertical greens, sky club and sustainable design. Festival offer live!",
-      videoUrl: "https://videos.pexels.com/video-files/18069170/18069170-uhd_1440_1440_24fps.mp4",
-      thumbnail: "https://images.unsplash.com/photo-1600585154526-990dced4db0d?w=600&h=1000&fit=crop",
-      image: "https://images.unsplash.com/photo-1600585154526-990dced4db0d?w=600&h=1000&fit=crop",
-      phone: "9811 750 744", demandText: "Limited Inventory: Only 8 units left in this tower", activeBuyers: 42, monthlyRental: "₹58,000/mo", roi: "4.7%", badge: "VERTI GREENS", verified: true
-    }
-  ],
-  builders: [
-    { id:"b1", name:"DLF Homes", logo:"https://via.placeholder.com/140x70/0B2B4A/FFFFFF?text=DLF", subtext:"Our Expertise. Your Joy.", projects:"17 Projects", count:17 },
-    { id:"b2", name:"M3M India", logo:"https://via.placeholder.com/140x70/1e3a5f/FFFFFF?text=M3M", subtext:"Our Expertise. Your Joy.", projects:"41 Projects", count:41 },
-    { id:"b3", name:"Oberoi Realty", logo:"https://via.placeholder.com/140x70/1a1a1a/D4AF37?text=OBEROI", subtext:"", projects:"1 Project", count:1 },
-    { id:"b4", name:"MVN Infrastructure", logo:"https://via.placeholder.com/140x70/0A1931/D4AF37?text=MVN", subtext:"", projects:"2 Projects", count:2 },
-    { id:"b5", name:"Godrej Properties", logo:"https://via.placeholder.com/140x70/ffffff/0B2B4A?text=GODREJ", subtext:"", projects:"25 Projects", count:25 },
-    { id:"b6", name:"BPTP Limited", logo:"https://via.placeholder.com/140x70/111111/ffffff?text=BPTP", subtext:"", projects:"13 Projects", count:13 },
-    { id:"b7", name:"Trump Towers", logo:"https://via.placeholder.com/140x70/0A0A0A/D4AF37?text=TRUMP", subtext:"", projects:"3 Projects", count:3 },
-    { id:"b8", name:"Kreeva", logo:"https://via.placeholder.com/140x70/fff8e1/D4AF37?text=KREEVA", subtext:"", projects:"2 Projects", count:2 },
-    { id:"b9", name:"Signature Global", logo:"https://via.placeholder.com/140x70/5b3a0a/ffffff?text=SIGNATURE", subtext:"", projects:"18 Projects", count:18 },
-    { id:"b10", name:"Emaar India", logo:"https://via.placeholder.com/140x70/1a3c5e/ffffff?text=EMAAR", subtext:"", projects:"22 Projects", count:22 }
-  ],
-  testimonials: [
-    { id:"t1", name:"Aayush Gupta", initials:"AG", color:"#F59E0B", platform:"Google", verified:true, rating:5, text:"Rajesh ji is awesome. One place stop for all your real estate deals. Good natured, an honest and god fearing person." },
-    { id:"t2", name:"Soumya", initials:"SO", color:"#E9D5FF", textColor:"#6B21A8", platform:"Google", verified:true, rating:5, text:"Honestly, had a really smooth experience with HomWisor. The team was friendly and actually listened to what I needed. They didn't waste my time with random options and only showed me the best fits." },
-    { id:"t3", name:"Amit Kumar", initials:"AK", color:"#D6D3D1", textColor:"#44403C", platform:"Google", verified:true, rating:5, text:"HomWisor made my home buying journey smooth and hassle-free. Their attention to detail and customer service is exceptional." },
-    { id:"t4", name:"Neha Gupta", initials:"NG", color:"#10B981", platform:"Google", verified:true, rating:5, text:"Very professional team with deep knowledge of the market. They helped me find the perfect investment property with great returns." }
-  ],
-  enquiries: [
-    { id: "e1", name: "Rahul Sharma", phone: "98XXXXX210", email: "rahul@example.com", property: "Godrej Verano", message: "Interested in 3BHK", date: "2026-09-16" }
-  ],
-  settings: {
-    siteName: "HomWisor.com",
-    contactPhone: "8500 900 100",
-    contactEmail: "info@HomWisor.com",
-    address: "Gurugram, Haryana"
-  }
-};
+  const app = express()
+  app.use(cors())
+  app.use(express.json({ limit: '10mb' }))
+  app.use(express.urlencoded({ extended: true }))
 
-function loadData() {
-  if (!fs.existsSync(DATA_FILE)) {
-    fs.writeFileSync(DATA_FILE, JSON.stringify(defaultData, null, 2));
-    return defaultData;
-  }
-  try {
-    const raw = fs.readFileSync(DATA_FILE, 'utf8');
-    const parsed = JSON.parse(raw);
-    if (!parsed.snaps) parsed.snaps = defaultData.snaps;
-    if (!parsed.banners) parsed.banners = defaultData.banners;
-    if (!parsed.builders) parsed.builders = defaultData.builders;
-    if (!parsed.testimonials) parsed.testimonials = defaultData.testimonials;
-    // ensure properties have new fields
-    if (parsed.properties) {
-      parsed.properties = parsed.properties.map(p => {
-        const def = defaultData.properties.find(d => d.id === p.id) || {};
-        return { ...def, ...p, highlights: p.highlights || def.highlights || [], gallery: p.gallery || def.gallery || [], logo: p.logo || def.logo || "", brandColor: p.brandColor || def.brandColor || "#1e3a5f" };
-      });
-      // add any missing default properties
-      defaultData.properties.forEach(d => {
-        if (!parsed.properties.find(p => p.id === d.id)) parsed.properties.push(d);
-      });
-    }
-    return { ...defaultData, ...parsed, banners: parsed.banners || defaultData.banners, snaps: parsed.snaps || defaultData.snaps, builders: parsed.builders || defaultData.builders, testimonials: parsed.testimonials || defaultData.testimonials };
-  } catch (e) {
-    fs.writeFileSync(DATA_FILE, JSON.stringify(defaultData, null, 2));
-    return defaultData;
-  }
+  const uploadsDir = path.join(__dirname, 'uploads')
+  if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir)
+  app.use('/uploads', express.static(uploadsDir))
+
+  app.get('/api/health', (req, res) => res.json({ status: 'ok', db: 'mongo', time: new Date().toISOString() }))
+
+  app.use('/api/admin', authRoutes)
+  app.use('/api/admin', adminRoutes)
+  app.use('/api/properties', propertyRoutes)
+  app.use('/api/snaps', snapRoutes)
+  app.use('/api/banners', bannerRoutes)
+  app.use('/api/locations', locationRoutes)
+  app.use('/api/offers', offerRoutes)
+  app.use('/api/builders', builderRoutes)
+  app.use('/api/testimonials', testimonialRoutes)
+  app.use('/api/enquiries', enquiryRoutes)
+  app.use('/api/settings', settingsRoutes)
+
+  app.use('/api', (req, res) => res.status(404).json({ error: 'Not found' }))
+  app.use((err, req, res, next) => {
+    console.error(err)
+    res.status(500).json({ error: err.message })
+  })
+
+  app.listen(PORT, '0.0.0.0', () => console.log(`🚀 Backend (MongoDB) running on http://localhost:${PORT}`))
 }
-function saveData(data) {
-  fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2));
-}
-
-let db = loadData();
-
-function authMiddleware(req, res, next) {
-  const auth = req.headers.authorization;
-  if (!auth) return res.status(401).json({ error: 'No token' });
-  const token = auth.split(' ')[1];
-  try {
-    const decoded = jwt.verify(token, JWT_SECRET);
-    req.user = decoded;
-    next();
-  } catch {
-    return res.status(401).json({ error: 'Invalid token' });
-  }
-}
-
-app.post('/api/admin/login', (req, res) => {
-  const { username, password } = req.body;
-  if (username === 'admin' && password === 'admin123') {
-    const token = jwt.sign({ username: 'admin', role: 'admin' }, JWT_SECRET, { expiresIn: '24h' });
-    return res.json({ token, user: { username: 'admin' } });
-  }
-  return res.status(401).json({ error: 'Invalid credentials. Use admin / admin123' });
-});
-
-app.get('/api/banners', (req, res) => res.json(db.banners));
-app.get('/api/locations', (req, res) => res.json(db.locations));
-app.get('/api/offers', (req, res) => res.json(db.offers));
-app.get('/api/snaps', (req, res) => res.json(db.snaps));
-app.get('/api/settings', (req, res) => res.json(db.settings));
-app.get('/api/builders', (req, res) => res.json(db.builders||[]));
-app.get('/api/testimonials', (req, res) => res.json(db.testimonials||[]));
-
-app.get('/api/properties', (req, res) => {
-  const { category, search, type, location, status, limit } = req.query;
-  let result = [...db.properties];
-  if (category) result = result.filter(p => p.category === category);
-  if (status) result = result.filter(p => p.status === status);
-  if (type) result = result.filter(p => p.type.toLowerCase() === type.toLowerCase());
-  if (location) result = result.filter(p => p.location.toLowerCase().includes(location.toLowerCase()));
-  if (search) {
-    const s = search.toLowerCase();
-    result = result.filter(p => p.title.toLowerCase().includes(s) || p.location.toLowerCase().includes(s));
-  }
-  if (limit) result = result.slice(0, parseInt(limit));
-  res.json(result);
-});
-
-app.get('/api/properties/:id', (req, res) => {
-  const prop = db.properties.find(p => p.id === req.params.id);
-  if (!prop) return res.status(404).json({ error: 'Not found' });
-  res.json(prop);
-});
-
-app.get('/api/snaps/:id', (req, res) => {
-  const snap = db.snaps.find(s => s.id === req.params.id);
-  if (!snap) return res.status(404).json({ error: 'Not found' });
-  res.json(snap);
-});
-
-app.post('/api/properties', authMiddleware, (req, res) => {
-  const newProp = { id: 'p' + Date.now(), ...req.body };
-  db.properties.unshift(newProp);
-  saveData(db);
-  res.json(newProp);
-});
-app.put('/api/properties/:id', authMiddleware, (req, res) => {
-  const idx = db.properties.findIndex(p => p.id === req.params.id);
-  if (idx === -1) return res.status(404).json({ error: 'Not found' });
-  db.properties[idx] = { ...db.properties[idx], ...req.body, id: req.params.id };
-  saveData(db);
-  res.json(db.properties[idx]);
-});
-app.delete('/api/properties/:id', authMiddleware, (req, res) => {
-  const before = db.properties.length;
-  db.properties = db.properties.filter(p => p.id !== req.params.id);
-  if (db.properties.length === before) return res.status(404).json({ error: 'Not found' });
-  saveData(db);
-  res.json({ success: true });
-});
-
-app.post('/api/snaps', authMiddleware, (req, res) => {
-  const newSnap = { id: 'snap' + Date.now(), ...req.body };
-  db.snaps.push(newSnap);
-  saveData(db);
-  res.json(newSnap);
-});
-app.put('/api/snaps/:id', authMiddleware, (req, res) => {
-  const idx = db.snaps.findIndex(s => s.id === req.params.id);
-  if (idx === -1) return res.status(404).json({ error: 'Not found' });
-  db.snaps[idx] = { ...db.snaps[idx], ...req.body, id: req.params.id };
-  saveData(db);
-  res.json(db.snaps[idx]);
-});
-app.delete('/api/snaps/:id', authMiddleware, (req, res) => {
-  const before = db.snaps.length;
-  db.snaps = db.snaps.filter(s => s.id !== req.params.id);
-  if (db.snaps.length === before) return res.status(404).json({ error: 'Not found' });
-  saveData(db);
-  res.json({ success: true });
-});
-
-app.post('/api/banners/:type', authMiddleware, (req, res) => {
-  const type = req.params.type;
-  if (!['hero','small'].includes(type)) return res.status(400).json({error:'invalid type'});
-  const newBanner = { id: type[0] + Date.now(), ...req.body };
-  db.banners[type].push(newBanner);
-  saveData(db);
-  res.json(newBanner);
-});
-app.put('/api/banners/:type/:id', authMiddleware, (req, res) => {
-  const { type, id } = req.params;
-  const idx = db.banners[type]?.findIndex(b=>b.id===id);
-  if(idx===-1 || idx===undefined) return res.status(404).json({error:'Not found'});
-  db.banners[type][idx] = {...db.banners[type][idx], ...req.body, id};
-  saveData(db);
-  res.json(db.banners[type][idx]);
-});
-app.delete('/api/banners/:type/:id', authMiddleware, (req, res) => {
-  const { type, id } = req.params;
-  const before = db.banners[type].length;
-  db.banners[type] = db.banners[type].filter(b=>b.id!==id);
-  if(before===db.banners[type].length) return res.status(404).json({error:'Not found'});
-  saveData(db);
-  res.json({success:true});
-});
-
-app.post('/api/locations', authMiddleware, (req,res)=>{
-  const newLoc = { id: 'l'+Date.now(), ...req.body };
-  db.locations.push(newLoc);
-  saveData(db);
-  res.json(newLoc);
-});
-app.put('/api/locations/:id', authMiddleware, (req,res)=>{
-  const idx=db.locations.findIndex(l=>l.id===req.params.id);
-  if(idx===-1) return res.status(404).json({error:'Not found'});
-  db.locations[idx]={...db.locations[idx],...req.body, id:req.params.id};
-  saveData(db);
-  res.json(db.locations[idx]);
-});
-app.delete('/api/locations/:id', authMiddleware, (req,res)=>{
-  db.locations=db.locations.filter(l=>l.id!==req.params.id);
-  saveData(db);
-  res.json({success:true});
-});
-
-app.post('/api/offers', authMiddleware, (req,res)=>{
-  const newOffer={ id:'o'+Date.now(), ...req.body };
-  db.offers.push(newOffer);
-  saveData(db);
-  res.json(newOffer);
-});
-app.put('/api/offers/:id', authMiddleware, (req,res)=>{
-  const idx=db.offers.findIndex(o=>o.id===req.params.id);
-  if(idx===-1) return res.status(404).json({error:'Not found'});
-  db.offers[idx]={...db.offers[idx],...req.body, id:req.params.id};
-  saveData(db);
-  res.json(db.offers[idx]);
-});
-app.delete('/api/offers/:id', authMiddleware, (req,res)=>{
-  db.offers=db.offers.filter(o=>o.id!==req.params.id);
-  saveData(db);
-  res.json({success:true});
-});
-
-app.post('/api/builders', authMiddleware, (req,res)=>{ const b={id:'b'+Date.now(),...req.body}; db.builders.push(b); saveData(db); res.json(b); });
-app.delete('/api/builders/:id', authMiddleware, (req,res)=>{ db.builders=db.builders.filter(b=>b.id!==req.params.id); saveData(db); res.json({success:true}); });
-app.post('/api/testimonials', authMiddleware, (req,res)=>{ const t={id:'t'+Date.now(),...req.body}; db.testimonials.push(t); saveData(db); res.json(t); });
-app.delete('/api/testimonials/:id', authMiddleware, (req,res)=>{ db.testimonials=db.testimonials.filter(t=>t.id!==req.params.id); saveData(db); res.json({success:true}); });
-app.get('/api/enquiries', authMiddleware, (req,res)=> res.json(db.enquiries));
-app.post('/api/enquiries', (req,res)=>{
-  const newEnq = { id:'e'+Date.now(), date:new Date().toISOString().slice(0,10), ...req.body };
-  db.enquiries.unshift(newEnq);
-  saveData(db);
-  res.json(newEnq);
-});
-app.delete('/api/enquiries/:id', authMiddleware, (req,res)=>{
-  db.enquiries=db.enquiries.filter(e=>e.id!==req.params.id);
-  saveData(db);
-  res.json({success:true});
-});
-
-app.put('/api/settings', authMiddleware, (req,res)=>{
-  db.settings = {...db.settings, ...req.body};
-  saveData(db);
-  res.json(db.settings);
-});
-
-app.get('/api/admin/stats', authMiddleware, (req,res)=>{
-  res.json({
-    totalProperties: db.properties.length,
-    totalEnquiries: db.enquiries.length,
-    totalLocations: db.locations.length,
-    totalOffers: db.offers.length,
-    totalSnaps: db.snaps.length,
-    totalBuilders: (db.builders||[]).length,
-    totalTestimonials: (db.testimonials||[]).length,
-    recommended: db.properties.filter(p=>p.category==='recommended').length,
-    trending: db.properties.filter(p=>p.category==='trending').length
-  });
-});
-
-app.post('/api/admin/reset', authMiddleware, (req,res)=>{
-  db = JSON.parse(JSON.stringify(defaultData));
-  saveData(db);
-  res.json({success:true, db});
-});
-
-app.get('/api/health', (req,res)=> res.json({status:'ok', time: new Date().toISOString()}));
-
-app.listen(PORT, '0.0.0.0', () => console.log(`Backend running on http://0.0.0.0:${PORT}`));
