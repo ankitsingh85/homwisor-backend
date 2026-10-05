@@ -8,6 +8,8 @@ import Snap from '../models/Snap.js'
 import Enquiry from '../models/Enquiry.js'
 import Settings from '../models/Settings.js'
 import { defaultData } from './seedData.js'
+import { migrateRecommended } from './migrateRecommended.js'
+import { seedBrandedLuxury } from './brandedLuxury.js'
 
 export const seedIfEmpty = async () => {
   const counts = await Promise.all([
@@ -52,6 +54,8 @@ export const seedForce = async () => {
   await Snap.insertMany(defaultData.snaps)
   if (defaultData.enquiries?.length) await Enquiry.insertMany(defaultData.enquiries)
   await Settings.create({ key: 'main', ...defaultData.settings })
+  await migrateRecommended({ rebuild: true })
+  await seedBrandedLuxury()
 
   console.log(`✅ Seeded: ${defaultData.properties.length} properties, ${defaultData.banners.hero.length+defaultData.banners.small.length} banners, ${defaultData.locations.length} locations, ${defaultData.offers.length} offers, ${defaultData.builders.length} builders, ${defaultData.testimonials.length} testimonials, ${defaultData.snaps.length} snaps`)
 }

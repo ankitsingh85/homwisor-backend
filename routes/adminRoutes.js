@@ -8,7 +8,7 @@ import Builder from '../models/Builder.js'
 import Testimonial from '../models/Testimonial.js'
 import Banner from '../models/Banner.js'
 import Settings from '../models/Settings.js'
-import { protect } from '../middleware/auth.js'
+import { protect, requireRole } from '../middleware/auth.js'
 import { seedIfEmpty, seedForce } from '../utils/seed.js'
 
 const router = express.Router()
@@ -30,12 +30,12 @@ router.get('/stats', protect, async (req, res) => {
   res.json({ totalProperties, totalEnquiries, totalLocations, totalOffers, totalSnaps, totalBuilders, totalTestimonials, recommended, trending })
 })
 
-router.post('/reset', protect, async (req, res) => {
+router.post('/reset', protect, requireRole('superadmin'), async (req, res) => {
   await seedForce()
   res.json({ success: true })
 })
 
-router.post('/seed', protect, async (req, res) => {
+router.post('/seed', protect, requireRole('superadmin'), async (req, res) => {
   await seedIfEmpty()
   res.json({ success: true })
 })

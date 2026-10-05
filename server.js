@@ -6,13 +6,23 @@ import 'dotenv/config'
 import express from 'express'
 import 'express-async-errors'
 import cors from 'cors'
+import helmet from 'helmet'
 import fs from 'fs'
 import path from 'path'
 import { fileURLToPath } from 'url'
 import connectDB from './config/db.js'
 import { seedIfEmpty } from './utils/seed.js'
+import { bootstrapAdmin } from './utils/bootstrapAdmin.js'
+import { migrateRecommended } from './utils/migrateRecommended.js'
+import { migrateShowcase } from './utils/brandedLuxury.js'
+import { seedBlogs } from './utils/seedBlogs.js'
 
 import authRoutes from './routes/authRoutes.js'
+import imageRoutes from './routes/imageRoutes.js'
+import fileRoutes from './routes/fileRoutes.js'
+import blogRoutes from './routes/blogRoutes.js'
+import recommendedRoutes from './routes/recommendedRoutes.js'
+import adminUserRoutes from './routes/adminUserRoutes.js'
 import adminRoutes from './routes/adminRoutes.js'
 import propertyRoutes from './routes/propertyRoutes.js'
 import snapRoutes from './routes/snapRoutes.js'
@@ -38,8 +48,14 @@ if (!conn && process.env.NODE_ENV === 'production') {
   await import('./server.file.js')
 } else {
   await seedIfEmpty()
+  await bootstrapAdmin()
+  await migrateRecommended()
+  await migrateShowcase()
+  await seedBlogs()
 
   const app = express()
+  app.set('trust proxy', 1) // behind Render's proxy — needed for per-IP login rate limiting
+  app.use(helmet({ crossOriginResourcePolicy: { policy: 'cross-origin' } }))
   app.use(cors())
   app.use(express.json({ limit: '10mb' }))
   app.use(express.urlencoded({ extended: true }))
@@ -50,9 +66,14 @@ if (!conn && process.env.NODE_ENV === 'production') {
 
   app.get('/api/health', (req, res) => res.json({ status: 'ok', db: 'mongo', time: new Date().toISOString() }))
 
+  app.use('/api/admin/users', adminUserRoutes)
   app.use('/api/admin', authRoutes)
   app.use('/api/admin', adminRoutes)
+  app.use('/api/images', imageRoutes)
+  app.use('/api/files', fileRoutes)
+  app.use('/api/blogs', blogRoutes)
   app.use('/api/properties', propertyRoutes)
+  app.use('/api/recommended', recommendedRoutes)
   app.use('/api/snaps', snapRoutes)
   app.use('/api/banners', bannerRoutes)
   app.use('/api/locations', locationRoutes)

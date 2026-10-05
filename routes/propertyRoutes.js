@@ -17,7 +17,7 @@ router.get('/', async (req, res) => {
       const s = search
       query.$or = [{ title: new RegExp(s, 'i') }, { location: new RegExp(s, 'i') }]
     }
-    let q = Property.find(query).sort({ createdAt: -1 })
+    let q = Property.find(query).sort({ createdAt: -1, _id: -1 })
     if (limit) q = q.limit(parseInt(limit))
     const props = await q.lean()
     res.json(props)

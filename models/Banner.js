@@ -6,7 +6,8 @@ const bannerSchema = new mongoose.Schema({
   title: String,
   link: String,
   developer: String,
-  type: { type: String, enum: ['hero','small'], required: true }
+  // hero = big top banner, slider = wide strip below the search box, small = tall side ads
+  type: { type: String, enum: ['hero', 'slider', 'small'], required: true }
 }, { timestamps: true, collection: 'banners' })
 
 export default mongoose.model('Banner', bannerSchema)
