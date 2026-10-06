@@ -11,6 +11,7 @@ const sectionSchema = new mongoose.Schema({
 const blogSchema = new mongoose.Schema({
   id: { type: String, required: true, unique: true },
   slug: { type: String, required: true, unique: true },   // URL: /blog/<slug>
+  oldSlugs: { type: [String], default: [], index: true }, // previous slugs — old links still work
   title: { type: String, required: true },
   category: { type: String, default: 'Real Estate News' },
   excerpt: String,                                          // short intro shown on cards + top of the article

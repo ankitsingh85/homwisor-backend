@@ -3,6 +3,8 @@ import mongoose from 'mongoose'
 const propertySchema = new mongoose.Schema({
   id: { type: String, required: true, unique: true, index: true },
   title: { type: String, required: true },
+  slug: { type: String, unique: true, sparse: true },   // web address: /property/<slug>
+  oldSlugs: { type: [String], default: [], index: true }, // previous slugs — old links still work
   price: String,
   priceRange: String,
   location: String,

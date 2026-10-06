@@ -1,20 +1,16 @@
 import express from 'express'
 import Blog from '../models/Blog.js'
 import { protect } from '../middleware/auth.js'
+import { uniqueSlug, nextOldSlugs } from '../utils/slug.js'
 
 const router = express.Router()
 
-export const slugify = (s = '') =>
-  String(s).toLowerCase().normalize('NFKD').replace(/[̀-ͯ]/g, '')
-    .replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '').slice(0, 90)
-
-// "my-title" → "my-title-2" if taken by another article
-const uniqueSlug = async (wanted, exceptId) => {
-  const base = slugify(wanted) || 'article'
-  let slug = base
-  for (let n = 2; await Blog.exists({ slug, ...(exceptId ? { id: { $ne: exceptId } } : {}) }); n++) slug = `${base}-${n}`
-  return slug
-}
+// "my-title" → "my-title-2" if taken by another article (or one of its old addresses)
+// Articles live at homwisor.com/<slug>, so they can't take the name of a site page
+const RESERVED = ['about', 'search', 'blog', 'contact', 'admin', 'property', 'property-snaps', 'snaps', 'location', 'budget',
+  'property-type', 'commercial', 'status', 'residential-projects', 'commercial-projects', 'privacy-policy',
+  'terms-and-conditions', 'api', 'assets', 'images', 'uploads', 'index', 'index-html']
+const uniqueBlogSlug = (wanted, exceptId) => uniqueSlug(Blog, wanted, exceptId, 'article', RESERVED)
 
 const str = (v, max) => (v == null ? undefined : String(v).trim().slice(0, max))
 
@@ -66,7 +62,10 @@ router.get('/admin/:id', protect, async (req, res) => {
 
 // Public: one published article by slug
 router.get('/:slug', async (req, res) => {
-  const doc = await Blog.findOne({ slug: req.params.slug, status: 'published', publishedAt: { $lte: new Date() } }).lean()
+  const live = { status: 'published', publishedAt: { $lte: new Date() } }
+  const doc =
+    (await Blog.findOne({ slug: req.params.slug, ...live }).lean()) ||
+    (await Blog.findOne({ oldSlugs: req.params.slug, ...live }).lean()) // old address → page redirects to the new one
   if (!doc) return res.status(404).json({ error: 'Article not found' })
   res.json(doc)
 })
@@ -75,7 +74,7 @@ router.post('/', protect, async (req, res) => {
   const body = pick(req.body)
   if (!body.title) return res.status(400).json({ error: 'Please enter a title' })
   const id = 'b' + Date.now()
-  const slug = await uniqueSlug(req.body.slug || body.title)
+  const slug = await uniqueBlogSlug(req.body.slug || body.title)
   if (body.featured) await Blog.updateMany({ featured: true }, { featured: false })
   const doc = await Blog.create({ ...body, id, slug })
   res.status(201).json(doc)
@@ -84,7 +83,12 @@ router.post('/', protect, async (req, res) => {
 router.put('/:id', protect, async (req, res) => {
   const body = pick(req.body)
   if (body.title === '') return res.status(400).json({ error: 'Please enter a title' })
-  if (req.body.slug !== undefined) body.slug = await uniqueSlug(req.body.slug || body.title || req.params.id, req.params.id)
+  if (req.body.slug !== undefined) {
+    const prev = await Blog.findOne({ id: req.params.id }).lean()
+    if (!prev) return res.status(404).json({ error: 'Article not found' })
+    body.slug = await uniqueBlogSlug(req.body.slug || body.title || prev.title, req.params.id)
+    body.oldSlugs = nextOldSlugs(prev, body.slug)
+  }
   if (body.featured) await Blog.updateMany({ featured: true, id: { $ne: req.params.id } }, { featured: false })
   const doc = await Blog.findOneAndUpdate({ id: req.params.id }, body, { new: true, runValidators: true })
   if (!doc) return res.status(404).json({ error: 'Article not found' })

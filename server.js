@@ -16,6 +16,7 @@ import { bootstrapAdmin } from './utils/bootstrapAdmin.js'
 import { migrateRecommended } from './utils/migrateRecommended.js'
 import { migrateShowcase } from './utils/brandedLuxury.js'
 import { seedBlogs } from './utils/seedBlogs.js'
+import { migrateSlugs } from './utils/migrateSlugs.js'
 
 import authRoutes from './routes/authRoutes.js'
 import imageRoutes from './routes/imageRoutes.js'
@@ -52,6 +53,7 @@ if (!conn && process.env.NODE_ENV === 'production') {
   await migrateRecommended()
   await migrateShowcase()
   await seedBlogs()
+  await migrateSlugs()
 
   const app = express()
   app.set('trust proxy', 1) // behind Render's proxy — needed for per-IP login rate limiting
