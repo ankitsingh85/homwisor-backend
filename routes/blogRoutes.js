@@ -2,6 +2,7 @@ import express from 'express'
 import Blog from '../models/Blog.js'
 import { protect } from '../middleware/auth.js'
 import { uniqueSlug, nextOldSlugs } from '../utils/slug.js'
+import { cleanBlogHtml } from '../utils/blogHtml.js'
 
 const router = express.Router()
 
@@ -31,6 +32,7 @@ const pick = (b = {}) => {
     if (!isNaN(d)) out.publishedAt = d
   }
   if (Array.isArray(b.tags)) out.tags = b.tags.map(t => str(t, 40)).filter(Boolean).slice(0, 15)
+  if (b.body !== undefined) out.body = cleanBlogHtml(b.body) // rich text from the editor — always cleaned
   if (Array.isArray(b.content)) {
     out.content = b.content
       .map(s => ({ heading: str(s?.heading, 200) || '', text: str(s?.text, 20000) || '', image: str(s?.image, 1000) || '' }))
@@ -47,12 +49,12 @@ router.get('/', async (req, res) => {
   const filter = { status: 'published', publishedAt: { $lte: new Date() } }
   if (req.query.category) filter.category = String(req.query.category)
   const limit = Math.min(Number(req.query.limit) || 100, 200)
-  res.json(await Blog.find(filter).select('-content').sort(listSort).limit(limit).lean())
+  res.json(await Blog.find(filter).select('-content -body').sort(listSort).limit(limit).lean())
 })
 
 // Admin: everything, including drafts and scheduled posts
 router.get('/admin/all', protect, async (req, res) => {
-  res.json(await Blog.find({}).select('-content').sort(listSort).lean())
+  res.json(await Blog.find({}).select('-content -body').sort(listSort).lean())
 })
 router.get('/admin/:id', protect, async (req, res) => {
   const doc = await Blog.findOne({ id: req.params.id }).lean()

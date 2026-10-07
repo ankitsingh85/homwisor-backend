@@ -11,6 +11,7 @@ export const IMAGE_RULES = {
   recommended: { label: 'Recommended card', minW: 500, minH: 450, ratio: [0.7, 1.6], ideal: '1000 × 1000 px (square-ish)' },
   blog:     { label: 'Blog image',       minW: 800,  minH: 400,  ratio: [1.2, 2.4],  ideal: '1600 × 900 px (landscape)' },
   avatar:   { label: 'Customer photo',   minW: 120,  minH: 120,  ratio: [0.7, 1.4],  ideal: '400 × 400 px (square)' },
+  inline:   { label: 'Article image',    minW: 300,  minH: 150,  ratio: [0.3, 4.0],  ideal: '1200 px wide (any shape)' },
   offer:    { label: 'Offer image',      minW: 600,  minH: 350,  ratio: [1.1, 2.2],  ideal: '1200 × 800 px (landscape)' },
 }
 

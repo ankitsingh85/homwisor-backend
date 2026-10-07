@@ -16,6 +16,7 @@ import { bootstrapAdmin } from './utils/bootstrapAdmin.js'
 import { migrateRecommended } from './utils/migrateRecommended.js'
 import { migrateShowcase } from './utils/brandedLuxury.js'
 import { seedBlogs } from './utils/seedBlogs.js'
+import { migrateBlogBodies } from './utils/blogHtml.js'
 import { migrateSlugs } from './utils/migrateSlugs.js'
 
 import authRoutes from './routes/authRoutes.js'
@@ -53,6 +54,7 @@ if (!conn && process.env.NODE_ENV === 'production') {
   await migrateRecommended()
   await migrateShowcase()
   await seedBlogs()
+  await migrateBlogBodies()
   await migrateSlugs()
 
   const app = express()

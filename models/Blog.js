@@ -16,7 +16,8 @@ const blogSchema = new mongoose.Schema({
   category: { type: String, default: 'Real Estate News' },
   excerpt: String,                                          // short intro shown on cards + top of the article
   image: String,                                            // cover photo
-  content: { type: [sectionSchema], default: [] },
+  body: String,                                             // article as rich-text HTML (admin editor)
+  content: { type: [sectionSchema], default: [] },          // older section-based articles (converted into body at startup)
   author: { type: String, default: 'HomWisor Insights' },
   tags: { type: [String], default: [] },
   status: { type: String, enum: ['published', 'draft'], default: 'published' },

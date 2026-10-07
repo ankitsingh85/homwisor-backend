@@ -5,6 +5,8 @@ const propertySchema = new mongoose.Schema({
   title: { type: String, required: true },
   slug: { type: String, unique: true, sparse: true },   // web address: /property/<slug>
   oldSlugs: { type: [String], default: [], index: true }, // previous slugs — old links still work
+  seoTitle: String,                                      // meta title (Google / link previews); empty → built from the name
+  seoDescription: String,                                // meta description; empty → from the overview
   price: String,
   priceRange: String,
   location: String,
