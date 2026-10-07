@@ -18,11 +18,13 @@ import { migrateShowcase } from './utils/brandedLuxury.js'
 import { seedBlogs } from './utils/seedBlogs.js'
 import { migrateBlogBodies } from './utils/blogHtml.js'
 import { migrateSlugs } from './utils/migrateSlugs.js'
+import { migrateOffers } from './utils/migrateOffers.js'
 
 import authRoutes from './routes/authRoutes.js'
 import imageRoutes from './routes/imageRoutes.js'
 import fileRoutes from './routes/fileRoutes.js'
 import blogRoutes from './routes/blogRoutes.js'
+import featureRoutes from './routes/featureRoutes.js'
 import recommendedRoutes from './routes/recommendedRoutes.js'
 import adminUserRoutes from './routes/adminUserRoutes.js'
 import adminRoutes from './routes/adminRoutes.js'
@@ -56,6 +58,7 @@ if (!conn && process.env.NODE_ENV === 'production') {
   await seedBlogs()
   await migrateBlogBodies()
   await migrateSlugs()
+  await migrateOffers()
 
   const app = express()
   app.set('trust proxy', 1) // behind Render's proxy — needed for per-IP login rate limiting
@@ -76,6 +79,7 @@ if (!conn && process.env.NODE_ENV === 'production') {
   app.use('/api/images', imageRoutes)
   app.use('/api/files', fileRoutes)
   app.use('/api/blogs', blogRoutes)
+  app.use('/api/features', featureRoutes)
   app.use('/api/properties', propertyRoutes)
   app.use('/api/recommended', recommendedRoutes)
   app.use('/api/snaps', snapRoutes)

@@ -1,11 +1,13 @@
-// Lead notification emails (nodemailer over Gmail / Google Workspace SMTP).
+// Lead notification emails (nodemailer over SMTP).
+// homwisor.com email is hosted by Hostinger, so that's the default server.
 //
 // .env:
-//   SMTP_USER=leads@homwisor.com      the Google account that sends the mail
-//   SMTP_PASS=xxxx xxxx xxxx xxxx      its Google App Password (not the normal password)
+//   SMTP_USER=leads@homwisor.com      the mailbox that sends the mail (full address)
+//   SMTP_PASS=…                        that mailbox's password
+//   SMTP_HOST / SMTP_PORT              optional — default smtp.hostinger.com : 465 (SSL)
+//                                      (Gmail: smtp.gmail.com + a Google App Password)
 //   LEADS_EMAIL=leads@homwisor.com     optional — property / blog / site forms go here
 //   SUPPORT_EMAIL=support@homwisor.com optional — contact page form goes here
-//   SMTP_HOST / SMTP_PORT              optional — default smtp.gmail.com : 465
 //
 // Without SMTP_USER / SMTP_PASS emails are skipped (enquiries are still saved).
 import nodemailer from 'nodemailer'
@@ -17,8 +19,10 @@ let transporter = null
 let warned = false
 
 function getTransporter() {
-  const user = process.env.SMTP_USER
-  const pass = (process.env.SMTP_PASS || '').replace(/\s+/g, '') // Google shows app passwords in groups of 4
+  const user = (process.env.SMTP_USER || '').trim()
+  const host = (process.env.SMTP_HOST || 'smtp.hostinger.com').trim()
+  let pass = process.env.SMTP_PASS || ''
+  if (/gmail\.com$/i.test(host)) pass = pass.replace(/\s+/g, '') // Google shows app passwords in groups of 4
   if (!user || !pass) {
     if (!warned) { console.warn('✉️  Email not configured (set SMTP_USER and SMTP_PASS) — enquiry emails are skipped'); warned = true }
     return null
@@ -26,7 +30,7 @@ function getTransporter() {
   if (!transporter) {
     const port = Number(process.env.SMTP_PORT) || 465
     transporter = nodemailer.createTransport({
-      host: process.env.SMTP_HOST || 'smtp.gmail.com',
+      host,
       port,
       secure: port === 465,
       auth: { user, pass },
