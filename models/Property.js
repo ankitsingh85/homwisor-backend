@@ -25,7 +25,8 @@ const propertySchema = new mongoose.Schema({
   tag: String,
   rera: { type: Boolean, default: true },
   bhk: String,
-  type: { type: String, enum: ['Apartment','Villa','Builder Floor','Plots','Commercial','Farmhouse','Retail','SCO'], default: 'Apartment' },
+  type: { type: String, default: 'Apartment', trim: true, maxlength: 40 },  // main type (first of types) — shown on cards
+  types: { type: [{ type: String, trim: true, maxlength: 40 }], default: undefined }, // all types, e.g. Apartment + Residential (admin can add new ones)
   status: String,
   // Project facts shown on the property detail page
   possession: String,
