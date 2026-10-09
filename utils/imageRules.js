@@ -11,13 +11,14 @@ const exact = (w, h) => { const r = w / h; return [+(r * (1 - TOLERANCE)).toFixe
 
 export const IMAGE_RULES = {
   // banners: full-width, shown cropped to fit any screen — a looser shape is fine
-  hero:     { label: 'Hero banner',      minW: 1400, minH: 450,  ratio: [2.2, 4.0],    ideal: '2100 × 700 px (wide, 3:1)' },
+  hero:     { label: 'Hero banner',      minW: 1600, minH: 400,  ratio: exact(4, 1),   shapeName: '4:1 (wide)', ideal: '2400 × 600 px' },
   slider:   { label: 'Image slider',     minW: 1200, minH: 200,  ratio: [4.5, 7.5],    ideal: '1700 × 300 px (very wide strip)' },
   logo:     { label: 'Logo',             minW: 120,  minH: 40,   ratio: [0.8, 6.0],    ideal: '400 × 160 px' },
   inline:   { label: 'Article image',    minW: 300,  minH: 150,  ratio: [0.3, 4.0],    ideal: '1200 px wide (any shape)' },
 
   // photos shown with object-fit: fill — exact shapes
   property: { label: 'Property photo',   minW: 1200, minH: 800,  ratio: exact(3, 2),   shapeName: '3:2',  ideal: '1800 × 1200 px' },
+  plan:     { label: 'Floor / site plan', minW: 1200, minH: 900,  ratio: exact(4, 3),   shapeName: '4:3', ideal: '1600 × 1200 px' },
   offer:    { label: 'Offer image',      minW: 900,  minH: 600,  ratio: exact(3, 2),   shapeName: '3:2',  ideal: '1200 × 800 px' },
   blog:     { label: 'Blog cover',       minW: 1280, minH: 720,  ratio: exact(16, 9),  shapeName: '16:9', ideal: '1600 × 900 px' },
   location: { label: 'Location image',   minW: 600,  minH: 600,  ratio: exact(1, 1),   shapeName: '1:1 (square)', ideal: '1000 × 1000 px' },

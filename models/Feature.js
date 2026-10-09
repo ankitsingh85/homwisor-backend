@@ -16,6 +16,7 @@ const featureSchema = new mongoose.Schema({
   highlight: String,        // part of the headline shown in gold
   description: String,
   points: { type: [String], default: undefined },
+  stats: { type: [{ _id: false, value: String, label: String }], default: undefined }, // developers band: empty = worked out automatically
   primaryLabel: String,
   primaryLink: String,
   secondaryLabel: String,

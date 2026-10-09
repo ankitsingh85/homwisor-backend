@@ -3,7 +3,7 @@ import Feature from '../models/Feature.js'
 import { protect } from '../middleware/auth.js'
 
 const router = express.Router()
-const KEYS = ['branded']
+const KEYS = ['branded', 'developers']
 const str = (v, max) => (v == null ? '' : String(v).trim().slice(0, max))
 
 // Only known fields, trimmed
@@ -12,6 +12,7 @@ const pick = (b = {}) => ({
   heading: str(b.heading, 160),
   highlight: str(b.highlight, 80),
   description: str(b.description, 600),
+  stats: Array.isArray(b.stats) ? b.stats.map((x) => ({ value: str(x?.value, 20), label: str(x?.label, 40) })).filter((x) => x.value && x.label).slice(0, 4) : [],
   points: Array.isArray(b.points) ? b.points.map((p) => str(p, 80)).filter(Boolean).slice(0, 4) : [],
   primaryLabel: str(b.primaryLabel, 40),
   primaryLink: str(b.primaryLink, 500),

@@ -30,6 +30,7 @@ const propertySchema = new mongoose.Schema({
   status: String,
   // Project facts shown on the property detail page
   possession: String,
+  area: String,                                          // unit sizes, e.g. "2,500 – 4,200 sq.ft." (detail page hero)
   landArea: String,
   towers: String,
   propertyTypeDetail: String,
@@ -42,7 +43,10 @@ const propertySchema = new mongoose.Schema({
   videoUrl: String,                 // "Watch video" (YouTube or .mp4 link)
   pricing: [{ _id: false, type: { type: String }, size: String, price: String }],     // Space & Pricing rows
   amenities: [String],
-  galleryCaptions: [String],        // caption for gallery[i]
+  galleryCaptions: [String],
+  floorPlans: [String],             // "Floor & Site Plans" images (4:3)
+  floorPlanCaptions: [String],      // caption for floorPlans[i], e.g. "3 BHK – 2,450 sq.ft."
+  floorPlanNote: String,            // short description above the plans        // caption for gallery[i]
   about: {                          // About the developer
     heading: String,
     subheading: String,

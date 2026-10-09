@@ -33,7 +33,7 @@ import snapRoutes from './routes/snapRoutes.js'
 import bannerRoutes from './routes/bannerRoutes.js'
 import locationRoutes from './routes/locationRoutes.js'
 import offerRoutes from './routes/offerRoutes.js'
-import builderRoutes from './routes/builderRoutes.js'
+import builderRoutes, { migrateBuilders } from './routes/builderRoutes.js'
 import testimonialRoutes from './routes/testimonialRoutes.js'
 import enquiryRoutes from './routes/enquiryRoutes.js'
 import settingsRoutes from './routes/settingsRoutes.js'
@@ -59,6 +59,7 @@ if (!conn && process.env.NODE_ENV === 'production') {
   await migrateBlogBodies()
   await migrateSlugs()
   await migrateOffers()
+  await migrateBuilders()
 
   const app = express()
   app.set('trust proxy', 1) // behind Render's proxy — needed for per-IP login rate limiting

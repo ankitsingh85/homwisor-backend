@@ -46,6 +46,8 @@ const SOURCE_LABEL = {
   contact: 'Contact page',
   property: 'Property page',
   blog: 'Blog article',
+  sell: 'Sell property',
+  popup: 'Popup form',
   other: 'Website',
 }
 
