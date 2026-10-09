@@ -21,7 +21,7 @@ const propertySchema = new mongoose.Schema({
   developer: String,
   highlights: [String],
   gallery: [String],
-  category: { type: String, enum: ['recommended','trending','upcoming','newlaunch','branded','luxury','commercial','sco'], default: 'trending' },
+  category: { type: String, enum: ['recommended','trending','upcoming','newlaunch','branded','luxury','commercial','sco','dubai'], default: 'trending' },
   tag: String,
   rera: { type: Boolean, default: true },
   bhk: String,
@@ -41,7 +41,7 @@ const propertySchema = new mongoose.Schema({
   tagline: String,                  // big overlay text on the image slider, e.g. "A New Icon Rises"
   taglineSub: String,               // small line under it, e.g. "Luxury living beyond compare"
   videoUrl: String,                 // "Watch video" (YouTube or .mp4 link)
-  pricing: [{ _id: false, type: { type: String }, size: String, price: String }],     // Space & Pricing rows
+  pricing: [{ _id: false, type: { type: String }, size: String, price: String, paymentPlan: String }], // Space & Pricing rows (paymentPlan e.g. "30:70")
   amenities: [String],
   galleryCaptions: [String],
   floorPlans: [String],             // "Floor & Site Plans" images (4:3)

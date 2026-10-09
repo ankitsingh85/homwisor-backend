@@ -9,7 +9,7 @@ const router = express.Router()
 // "my-title" → "my-title-2" if taken by another article (or one of its old addresses)
 // Articles live at homwisor.com/<slug>, so they can't take the name of a site page
 const RESERVED = ['about', 'search', 'blog', 'contact', 'admin', 'property', 'property-snaps', 'snaps', 'location', 'budget',
-  'property-type', 'commercial', 'status', 'residential-projects', 'commercial-projects', 'privacy-policy', 'sell', 'developer',
+  'property-type', 'commercial', 'status', 'residential-projects', 'commercial-projects', 'privacy-policy', 'sell', 'developer', 'dubai',
   'terms-and-conditions', 'api', 'assets', 'images', 'uploads', 'index', 'index-html']
 const uniqueBlogSlug = (wanted, exceptId) => uniqueSlug(Blog, wanted, exceptId, 'article', RESERVED)
 
