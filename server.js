@@ -37,6 +37,7 @@ import builderRoutes, { migrateBuilders } from './routes/builderRoutes.js'
 import testimonialRoutes from './routes/testimonialRoutes.js'
 import enquiryRoutes from './routes/enquiryRoutes.js'
 import settingsRoutes from './routes/settingsRoutes.js'
+import seoPageRoutes from './routes/seoPageRoutes.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const PORT = process.env.PORT || 5000
@@ -91,6 +92,7 @@ if (!conn && process.env.NODE_ENV === 'production') {
   app.use('/api/testimonials', testimonialRoutes)
   app.use('/api/enquiries', enquiryRoutes)
   app.use('/api/settings', settingsRoutes)
+  app.use('/api/seo-pages', seoPageRoutes)
 
   app.use('/api', (req, res) => res.status(404).json({ error: 'Not found' }))
   app.use((err, req, res, next) => {

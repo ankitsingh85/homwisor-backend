@@ -8,7 +8,7 @@ const recommendedSchema = new mongoose.Schema({
   price: { type: String, trim: true },
   location: { type: String, trim: true },
   link: { type: String, trim: true },
-  badge: { type: String, trim: true, default: 'Founder Choice' },
+  badge: { type: String, trim: true, default: '' },
   order: { type: Number, default: 0 },
 }, { timestamps: true, collection: 'recommended' })
 

@@ -12,7 +12,9 @@ const exact = (w, h) => { const r = w / h; return [+(r * (1 - TOLERANCE)).toFixe
 export const IMAGE_RULES = {
   // banners: full-width, shown cropped to fit any screen — a looser shape is fine
   hero:     { label: 'Hero banner',      minW: 1600, minH: 400,  ratio: exact(4, 1),   shapeName: '4:1 (wide)', ideal: '2400 × 600 px' },
-  slider:   { label: 'Image slider',     minW: 1200, minH: 200,  ratio: [4.5, 7.5],    ideal: '1700 × 300 px (very wide strip)' },
+  // phones: hero banners + offer strip (Admin → Banners → Mobile image)
+  mobileBanner: { label: 'Mobile banner', minW: 800, minH: 400, ratio: exact(2, 1), shapeName: '2:1 (wide)', ideal: '1080 × 540 px' },
+  slider:   { label: 'Image slider',     minW: 1200, minH: 212,  ratio: exact(17, 3),  shapeName: '17:3 (very wide strip)', ideal: '1700 × 300 px' },
   logo:     { label: 'Logo',             minW: 120,  minH: 40,   ratio: [0.8, 6.0],    ideal: '400 × 160 px' },
   inline:   { label: 'Article image',    minW: 300,  minH: 150,  ratio: [0.3, 4.0],    ideal: '1200 px wide (any shape)' },
 

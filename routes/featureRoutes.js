@@ -3,7 +3,14 @@ import Feature from '../models/Feature.js'
 import { protect } from '../middleware/auth.js'
 
 const router = express.Router()
-const KEYS = ['branded', 'developers']
+const KEYS = ['branded', 'developers', 'headings']
+// homepage sections whose heading the admin can change (Admin → Homepage Headings)
+const HEADING_KEYS = ['recommended', 'trending', 'newlaunch', 'prime', 'budget', 'branded', 'luxury', 'upcoming', 'bhk', 'festival', 'sco', 'commercial', 'testimonials', 'trust']
+const pickHeadings = (b = {}) => ({
+  sections: (Array.isArray(b.sections) ? b.sections : [])
+    .filter((s) => HEADING_KEYS.includes(s?.key))
+    .map((s) => ({ key: s.key, eyebrow: str(s.eyebrow, 60), heading: str(s.heading, 160), highlight: str(s.highlight, 80), description: str(s.description, 400) })),
+})
 const str = (v, max) => (v == null ? '' : String(v).trim().slice(0, max))
 
 // Only known fields, trimmed
@@ -37,7 +44,7 @@ router.get('/:key', async (req, res) => {
 
 router.put('/:key', protect, async (req, res) => {
   if (!KEYS.includes(req.params.key)) return res.status(404).json({ error: 'Not found' })
-  const doc = await Feature.findOneAndUpdate({ key: req.params.key }, { ...pick(req.body), key: req.params.key }, { new: true, upsert: true })
+  const doc = await Feature.findOneAndUpdate({ key: req.params.key }, { ...(req.params.key === 'headings' ? pickHeadings(req.body) : pick(req.body)), key: req.params.key }, { new: true, upsert: true })
   res.json(doc)
 })
 

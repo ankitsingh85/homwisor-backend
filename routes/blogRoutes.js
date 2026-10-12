@@ -1,5 +1,6 @@
 import express from 'express'
 import Blog from '../models/Blog.js'
+import SeoPage from '../models/SeoPage.js'
 import { protect } from '../middleware/auth.js'
 import { uniqueSlug, nextOldSlugs } from '../utils/slug.js'
 import { cleanBlogHtml } from '../utils/blogHtml.js'
@@ -8,10 +9,11 @@ const router = express.Router()
 
 // "my-title" → "my-title-2" if taken by another article (or one of its old addresses)
 // Articles live at homwisor.com/<slug>, so they can't take the name of a site page
-const RESERVED = ['about', 'search', 'blog', 'contact', 'admin', 'property', 'property-snaps', 'snaps', 'location', 'budget',
+export const RESERVED = ['about', 'search', 'blog', 'contact', 'admin', 'property', 'property-snaps', 'snaps', 'location', 'budget',
   'property-type', 'commercial', 'status', 'residential-projects', 'commercial-projects', 'privacy-policy', 'sell', 'developer', 'dubai',
   'terms-and-conditions', 'api', 'assets', 'images', 'uploads', 'index', 'index-html']
-const uniqueBlogSlug = (wanted, exceptId) => uniqueSlug(Blog, wanted, exceptId, 'article', RESERVED)
+// SEO pages (Admin → SEO Pages) also live at homwisor.com/<slug>, so their addresses are taken too
+const uniqueBlogSlug = async (wanted, exceptId) => uniqueSlug(Blog, wanted, exceptId, 'article', [...RESERVED, ...(await SeoPage.distinct('slug'))])
 
 const str = (v, max) => (v == null ? undefined : String(v).trim().slice(0, max))
 

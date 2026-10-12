@@ -47,6 +47,9 @@ const propertySchema = new mongoose.Schema({
   floorPlans: [String],             // "Floor & Site Plans" images (4:3)
   floorPlanCaptions: [String],      // caption for floorPlans[i], e.g. "3 BHK – 2,450 sq.ft."
   floorPlanNote: String,            // short description above the plans        // caption for gallery[i]
+  // "Payment Plan" section (under Floor & Site Plans): stages + description
+  paymentPlanSteps: [{ _id: false, value: String, label: String, note: String }], // e.g. 10% · Down Payment · On Booking Date
+  paymentPlanNote: String,
   about: {                          // About the developer
     heading: String,
     subheading: String,

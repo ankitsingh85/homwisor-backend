@@ -3,6 +3,7 @@ import mongoose from 'mongoose'
 const bannerSchema = new mongoose.Schema({
   id: { type: String, required: true, unique: true },
   image: { type: String, required: true },
+  mobileImage: String, // hero + slider: 2:1 image shown on phones instead of the wide one (Admin → Banners)
   title: String,
   link: String,
   developer: String,

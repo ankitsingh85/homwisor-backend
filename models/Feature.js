@@ -21,6 +21,8 @@ const featureSchema = new mongoose.Schema({
   primaryLink: String,
   secondaryLabel: String,
   secondaryLink: String,
+  // key "headings": homepage section headings (Admin → Homepage Headings)
+  sections: { type: [{ _id: false, key: String, eyebrow: String, heading: String, highlight: String, description: String }], default: undefined },
   main: cardSchema,
   side: {
     image: String,

@@ -8,7 +8,7 @@ const TYPES = ['hero', 'slider', 'small']
 // Only these fields can be set from the admin panel
 const pick = (b = {}) => {
   const out = {}
-  for (const k of ['image', 'title', 'link', 'developer']) if (b[k] !== undefined) out[k] = String(b[k] ?? '').trim()
+  for (const k of ['image', 'mobileImage', 'title', 'link', 'developer']) if (b[k] !== undefined) out[k] = String(b[k] ?? '').trim()
   return out
 }
 
