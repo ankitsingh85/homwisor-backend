@@ -18,6 +18,7 @@ const seoPageSchema = new mongoose.Schema({
   metaDescription: String,
   heading: String,          // H1 on the page
   intro: String,            // rich text above the results (cleaned HTML)
+  faqs: [{ _id: false, question: String, answer: String }], // shown under the results + FAQ schema for Google
   active: { type: Boolean, default: true }, // false = page not shown (address falls back to normal handling)
 }, { timestamps: true, collection: 'seopages' })
 

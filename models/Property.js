@@ -38,6 +38,7 @@ const propertySchema = new mongoose.Schema({
   // ---- Detail page content (all optional; the page falls back to sensible defaults) ----
   overview: String,                 // long description in the Overview section
   brochure: String,                 // PDF link (/api/files/:id) for the Brochure button
+  heroImage: String,                // detail page banner on desktop, 3:1 (2400 × 800) — else the main photo
   tagline: String,                  // big overlay text on the image slider, e.g. "A New Icon Rises"
   taglineSub: String,               // small line under it, e.g. "Luxury living beyond compare"
   videoUrl: String,                 // "Watch video" (YouTube or .mp4 link)

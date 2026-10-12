@@ -21,6 +21,12 @@ const pick = (b = {}) => {
   if (b.heading !== undefined) out.heading = str(b.heading, 200)
   if (b.intro !== undefined) out.intro = cleanBlogHtml(b.intro || '')
   if (b.active !== undefined) out.active = !!b.active
+  if (Array.isArray(b.faqs)) {
+    out.faqs = b.faqs
+      .map((f) => ({ question: str(f?.question, 300) || '', answer: str(f?.answer, 3000) || '' }))
+      .filter((f) => f.question && f.answer)
+      .slice(0, 30)
+  }
   return out
 }
 
@@ -40,7 +46,7 @@ const hasFilter = (doc) => FILTER_KEYS.some(k => doc[k])
 
 // Public: active pages (small — the search page uses them to point duplicate URLs at the clean address)
 router.get('/', async (req, res) => {
-  res.json(await SeoPage.find({ active: { $ne: false } }).select('-intro -_id -__v').sort({ createdAt: -1 }).lean())
+  res.json(await SeoPage.find({ active: { $ne: false } }).select('-intro -faqs -_id -__v').sort({ createdAt: -1 }).lean())
 })
 
 // Admin: all pages, including switched-off ones

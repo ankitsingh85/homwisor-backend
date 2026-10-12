@@ -10,8 +10,10 @@ import Blog from '../models/Blog.js'
 
 const VIDEO_HOSTS = ['www.youtube.com', 'youtube.com', 'www.youtube-nocookie.com', 'player.vimeo.com']
 
+// Text pasted from other websites often joins words with non-breaking spaces (&nbsp;),
+// which stops lines wrapping on narrow screens — they become normal spaces.
 export const cleanBlogHtml = (html = '') =>
-  sanitizeHtml(String(html), {
+  sanitizeHtml(String(html).replace(/&nbsp;|&#160;|\u00a0/gi, ' '), {
     allowedTags: [
       'h2', 'h3', 'h4', 'p', 'br', 'strong', 'b', 'em', 'i', 'u', 's', 'sub', 'sup', 'span',
       'blockquote', 'pre', 'code', 'ul', 'ol', 'li', 'a', 'img', 'iframe', 'hr',

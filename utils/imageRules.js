@@ -20,6 +20,7 @@ export const IMAGE_RULES = {
 
   // photos shown with object-fit: fill — exact shapes
   property: { label: 'Property photo',   minW: 1200, minH: 800,  ratio: exact(3, 2),   shapeName: '3:2',  ideal: '1800 × 1200 px' },
+  propertyHero: { label: 'Property page banner', minW: 1800, minH: 600, ratio: exact(3, 1), shapeName: '3:1 (wide)', ideal: '2400 × 800 px' },
   plan:     { label: 'Floor / site plan', minW: 1200, minH: 900,  ratio: exact(4, 3),   shapeName: '4:3', ideal: '1600 × 1200 px' },
   offer:    { label: 'Offer image',      minW: 900,  minH: 600,  ratio: exact(3, 2),   shapeName: '3:2',  ideal: '1200 × 800 px' },
   blog:     { label: 'Blog cover',       minW: 1280, minH: 720,  ratio: exact(16, 9),  shapeName: '16:9', ideal: '1600 × 900 px' },
