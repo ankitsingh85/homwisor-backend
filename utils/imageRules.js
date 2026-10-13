@@ -20,7 +20,8 @@ export const IMAGE_RULES = {
 
   // photos shown with object-fit: fill — exact shapes
   property: { label: 'Property photo',   minW: 1200, minH: 800,  ratio: exact(3, 2),   shapeName: '3:2',  ideal: '1800 × 1200 px' },
-  propertyHero: { label: 'Property page banner', minW: 1800, minH: 600, ratio: exact(3, 1), shapeName: '3:1 (wide)', ideal: '2400 × 800 px' },
+  // exactW/exactH: only this exact pixel size is accepted (shown 1:1 on the page, so it stays sharp)
+  propertyHero: { label: 'Property page banner', minW: 2400, minH: 800, exactW: 2400, exactH: 800, ratio: exact(3, 1), shapeName: '3:1 (wide)', ideal: '2400 × 800 px' },
   plan:     { label: 'Floor / site plan', minW: 1200, minH: 900,  ratio: exact(4, 3),   shapeName: '4:3', ideal: '1600 × 1200 px' },
   offer:    { label: 'Offer image',      minW: 900,  minH: 600,  ratio: exact(3, 2),   shapeName: '3:2',  ideal: '1200 × 800 px' },
   blog:     { label: 'Blog cover',       minW: 1280, minH: 720,  ratio: exact(16, 9),  shapeName: '16:9', ideal: '1600 × 900 px' },
@@ -41,6 +42,9 @@ export const imageProblem = (purpose, width, height) => {
   if (!width || !height) return 'Could not read the image size'
   const r = width / height
   const size = `${width} × ${height} px`
+  if (rule.exactW && (width !== rule.exactW || height !== rule.exactH)) {
+    return `${rule.label} must be exactly ${rule.exactW} × ${rule.exactH} px — your image is ${size}. Ask your designer to export it at exactly ${rule.exactW} × ${rule.exactH} px.`
+  }
   if (r < rule.ratio[0] || r > rule.ratio[1]) {
     return rule.shapeName
       ? `${rule.label} must be ${rule.shapeName} — your image is ${size}. Crop it to ${rule.shapeName} (for example ${rule.ideal}) so it fits without stretching.`
