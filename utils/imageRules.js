@@ -27,6 +27,7 @@ export const IMAGE_RULES = {
   location: { label: 'Location image',   minW: 600,  minH: 600,  ratio: exact(1, 1),   shapeName: '1:1 (square)', ideal: '1000 × 1000 px' },
   recommended: { label: 'Recommended card', minW: 600, minH: 600, ratio: exact(1, 1), shapeName: '1:1 (square)', ideal: '1000 × 1000 px' },
   avatar:   { label: 'Customer photo',   minW: 200,  minH: 200,  ratio: exact(1, 1),   shapeName: '1:1 (square)', ideal: '400 × 400 px' },
+  qr:       { label: 'RERA QR code',     minW: 150,  minH: 150,  ratio: exact(1, 1),   shapeName: '1:1 (square)', ideal: '500 × 500 px' },
   sidead:   { label: 'Side ad',          minW: 450,  minH: 1000, ratio: exact(9, 20),  shapeName: '9:20 (tall)', ideal: '720 × 1600 px' },
   snap:     { label: 'Snap thumbnail',   minW: 540,  minH: 960,  ratio: exact(9, 16),  shapeName: '9:16 (tall)', ideal: '1080 × 1920 px' },
 }

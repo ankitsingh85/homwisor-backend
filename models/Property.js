@@ -24,6 +24,8 @@ const propertySchema = new mongoose.Schema({
   category: { type: String, enum: ['recommended','trending','upcoming','newlaunch','branded','luxury','commercial','sco','dubai'], default: 'trending' },
   tag: String,
   rera: { type: Boolean, default: true },
+  reraNumber: String,               // RERA registration no. — shown under the Overview facts
+  reraQr: String,                   // RERA QR code image (square)
   bhk: String,
   type: { type: String, default: 'Apartment', trim: true, maxlength: 40 },  // main type (first of types) — shown on cards
   types: { type: [{ type: String, trim: true, maxlength: 40 }], default: undefined }, // all types, e.g. Apartment + Residential (admin can add new ones)
