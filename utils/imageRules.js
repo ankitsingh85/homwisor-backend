@@ -22,6 +22,7 @@ export const IMAGE_RULES = {
   property: { label: 'Property photo',   minW: 1200, minH: 800,  ratio: exact(3, 2),   shapeName: '3:2',  ideal: '1800 × 1200 px' },
   // exactW/exactH: only this exact pixel size is accepted (shown 1:1 on the page, so it stays sharp)
   propertyHero: { label: 'Property page banner', minW: 2400, minH: 800, exactW: 2400, exactH: 800, ratio: exact(3, 1), shapeName: '3:1 (wide)', ideal: '2400 × 800 px' },
+  propertyHeroMobile: { label: 'Mobile page banner', minW: 1080, minH: 1080, exactW: 1080, exactH: 1080, ratio: exact(1, 1), shapeName: '1:1 (square)', ideal: '1080 × 1080 px' },
   plan:     { label: 'Floor / site plan', minW: 1200, minH: 900,  ratio: exact(4, 3),   shapeName: '4:3', ideal: '1600 × 1200 px' },
   offer:    { label: 'Offer image',      minW: 900,  minH: 600,  ratio: exact(3, 2),   shapeName: '3:2',  ideal: '1200 × 800 px' },
   blog:     { label: 'Blog cover',       minW: 1280, minH: 720,  ratio: exact(16, 9),  shapeName: '16:9', ideal: '1600 × 900 px' },
