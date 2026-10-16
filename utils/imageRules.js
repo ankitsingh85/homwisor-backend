@@ -14,7 +14,7 @@ export const IMAGE_RULES = {
   hero:     { label: 'Hero banner',      minW: 1600, minH: 400,  ratio: exact(4, 1),   shapeName: '4:1 (wide)', ideal: '2400 × 600 px' },
   // phones: hero banners + offer strip (Admin → Banners → Mobile image)
   mobileBanner: { label: 'Mobile banner', minW: 800, minH: 400, ratio: exact(2, 1), shapeName: '2:1 (wide)', ideal: '1080 × 540 px' },
-  slider:   { label: 'Image slider',     minW: 1200, minH: 212,  ratio: exact(17, 3),  shapeName: '17:3 (very wide strip)', ideal: '1700 × 300 px' },
+  slider:   { label: 'Image slider',     minW: 1360, minH: 200,  ratio: exact(34, 5),  shapeName: '34:5 (very wide strip)', ideal: '1700 × 250 px' },
   logo:     { label: 'Logo',             minW: 120,  minH: 40,   ratio: [0.8, 6.0],    ideal: '400 × 160 px' },
   inline:   { label: 'Article image',    minW: 300,  minH: 150,  ratio: [0.3, 4.0],    ideal: '1200 px wide (any shape)' },
 
